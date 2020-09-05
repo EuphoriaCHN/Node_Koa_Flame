@@ -1,11 +1,9 @@
 import chalk from 'chalk';
+import { LogStatus } from './constant';
 
 namespace Utils {
-  // 标准状态类型
-  type TStatus = 'success' | 'warning' | 'error' | 'processing' | 'note';
-
   // 输出类型定义
-  type Tlog = TStatus | number;
+  type Tlog = LogStatus | number;
 
   /**
    * 无用输出，给啥吐啥
@@ -14,7 +12,7 @@ namespace Utils {
   const tmp = <T>(arg: T): T => arg;
 
   // 维护类型颜色映射表
-  const loggerColorMap: { [k in TStatus]: Function } = {
+  const loggerColorMap: { [k in LogStatus]: Function } = {
     success: chalk.green,
     warning: chalk.yellow,
     error: chalk.red,
@@ -35,9 +33,15 @@ namespace Utils {
   ) {
     const modeString = '['.concat(String(mode).toUpperCase()).concat(']');
 
-    const colorfulFunction = parseInt(String(mode))
+    let colorfulFunction = parseInt(String(mode))
       ? /* 是数字，直接输出 */ tmp
-      : /* 不是数字，用颜色转换 */ loggerColorMap[mode as TStatus];
+      : /* 不是数字，用颜色转换 */ loggerColorMap[mode as LogStatus];
+
+    if (!colorfulFunction) {
+      // default 情况
+      // 比如 GET 或 POST
+      colorfulFunction = chalk.greenBright;
+    }
 
     const msg = `${colorfulFunction(modeString)}: ${message}`;
 

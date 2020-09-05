@@ -10,11 +10,7 @@ import { ListenOptions } from 'net';
 
 import { logger } from './utils/util';
 import ORM from './lib/orm';
-import * as G from './lib/global';
-
-declare const globalThis: G.EuphoriaGlobal;
-globalThis.STATUS_CODE = G.STATUS_CODE;
-globalThis.HTTP_STATUS_CODE = G.HTTP_STATUS_CODE;
+import { HTTP_STATUS_CODE } from './utils/constant';
 
 namespace NS {
   // 定义 MVC 模块类型
@@ -85,6 +81,13 @@ namespace NS {
      * @param next Koa.Next
      */
     private async requestLog(ctx: Koa.ExtendableContext, next: Koa.Next) {
+      const { method, path, ip } = ctx.request;
+
+      (ctx.app as EuphoriaNode).sliceLog(
+        logger(`${ip} ${path}`, method as any, true),
+        'message'
+      );
+
       await next();
     }
 
@@ -292,7 +295,7 @@ namespace NS {
         }
       };
 
-      if (typeof listenCallback === 'function') {
+      if (typeof optionalListenCallback === 'function') {
         args[args.length - 1] = listenCallback;
       } else {
         args[args.length] = listenCallback;

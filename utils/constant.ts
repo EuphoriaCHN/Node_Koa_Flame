@@ -1,4 +1,6 @@
-import Global = NodeJS.Global;
+/**
+ * 定义常量
+ */
 
 export enum STATUS_CODE {
   SUCCESS = 1000,
@@ -14,7 +16,4 @@ export enum HTTP_STATUS_CODE {
   INTERNAL_SERVER_ERROR = 500,
 }
 
-export interface EuphoriaGlobal extends Global {
-  STATUS_CODE: typeof STATUS_CODE;
-  HTTP_STATUS_CODE: typeof HTTP_STATUS_CODE;
-}
+export type LogStatus = 'success' | 'warning' | 'error' | 'processing' | 'note';
