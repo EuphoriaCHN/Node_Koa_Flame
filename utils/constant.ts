@@ -18,14 +18,33 @@ export enum HTTP_STATUS_CODE {
   INTERNAL_SERVER_ERROR = 500,
 }
 
-const ROOT_PATH = path.resolve(__dirname, '..');
-const STATIC_PATH = path.resolve(ROOT_PATH, 'static');
-const VIEW_PATH = path.resolve(STATIC_PATH, 'dist');
-
 export const PROJECT_MODULE_PATH = {
-  ROOT: ROOT_PATH,
-  STATIC: STATIC_PATH,
-  VIEW: VIEW_PATH,
+  ROOT: '',
+  STATIC: '',
+  VIEW: '',
+  APP: '',
 };
+
+/**
+ * 支持个性化配置项目重要模块路径，不写参数代表初始化（或恢复初始化
+ * @param option 各个路径配置项
+ */
+export function setProjectModelPath(
+  option: Partial<typeof PROJECT_MODULE_PATH> = {}
+): void {
+  PROJECT_MODULE_PATH.ROOT =
+    option.ROOT ||
+    (process.cwd && process.cwd()) ||
+    process.env.PWD ||
+    __dirname;
+  PROJECT_MODULE_PATH.STATIC =
+    option.STATIC || path.resolve(PROJECT_MODULE_PATH.ROOT, 'static');
+  PROJECT_MODULE_PATH.VIEW =
+    option.VIEW || path.resolve(PROJECT_MODULE_PATH.STATIC, 'dist');
+  PROJECT_MODULE_PATH.APP =
+    option.APP || path.resolve(PROJECT_MODULE_PATH.ROOT, 'app');
+}
+
+setProjectModelPath();
 
 export type LogStatus = 'success' | 'warning' | 'error' | 'processing' | 'note';

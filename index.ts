@@ -15,6 +15,7 @@ import {
   HTTP_STATUS_CODE,
   STATUS_CODE,
   PROJECT_MODULE_PATH,
+  setProjectModelPath,
 } from './utils/constant';
 
 namespace NS {
@@ -159,6 +160,23 @@ namespace NS {
       }
 
       return this;
+    }
+
+    /**
+     * 修改模块文件路径
+     *
+     * 可供修改的项：
+     * - ROOT: 项目根路径，默认是 <code>/</code>（和 package.json 同级）
+     * - APP: app 文件路径，默认是 <code>ROOT/app</code>
+     * - STATIC: 静态资源路径，默认是 <code>ROOT/static</code>
+     * - VIEW: 模板路径，默认是 <code>ROOT/static/dist</code>
+     *
+     * 可以不传参数，代表 <b>恢复初始化</b>
+     *
+     * @param options 路径配置项
+     */
+    setProjectModelPath(options: Partial<typeof PROJECT_MODULE_PATH> = {}) {
+      setProjectModelPath(options);
     }
 
     /**
