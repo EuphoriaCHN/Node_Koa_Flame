@@ -10,6 +10,8 @@ import { Server } from 'http';
 
 import { logger } from './utils/util';
 import ORM from './lib/orm';
+import Router from './lib/router';
+
 import {
   HTTP_STATUS_CODE,
   STATUS_CODE,
@@ -70,7 +72,10 @@ namespace NS {
     private readonly checkModuleStrict: boolean;
 
     // ORM 实例
-    public ormInstance: ORM;
+    public orm: ORM;
+
+    // Router 实例
+    public static router: Router;
 
     constructor(options: IEuphoriaNode = {}) {
       super();
@@ -95,11 +100,15 @@ namespace NS {
         service: { path: null },
       };
       this.slice = false;
-      this.ormInstance = null;
+      this.orm = null;
+
+      // todo::
+      EuphoriaNode.router = null;
     }
 
     /**
      * 封装请求信息日志
+     * todo:: Response 日志
      * @param ctx Koa.ExtendableContext
      * @param next Koa.Next
      */
@@ -193,7 +202,7 @@ namespace NS {
         logging: this.sliceLog(null, 'databaseLog'),
       };
 
-      this.ormInstance = new ORM(
+      this.orm = new ORM(
         Object.assign(LOGER_OPTIONS, ORM.DEFAULT_OPTIONS, options)
       );
 
@@ -333,9 +342,9 @@ namespace NS {
       }
 
       // 如果当前有数据库 ORM 实例
-      if (this.ormInstance) {
+      if (this.orm) {
         // 进行数据库连接
-        this.ormInstance.connect(this.sliceLog(null, 'databaseLog'));
+        this.orm.connect(this.sliceLog(null, 'databaseLog'));
       }
 
       // 获取最后一个参数，看看是不是回调函数
