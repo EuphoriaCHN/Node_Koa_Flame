@@ -10,6 +10,11 @@ import { ListenOptions } from 'net';
 
 import { logger } from './utils/util';
 import ORM from './lib/orm';
+import * as G from './lib/global';
+
+declare const globalThis: G.EuphoriaGlobal;
+globalThis.STATUS_CODE = G.STATUS_CODE;
+globalThis.HTTP_STATUS_CODE = G.HTTP_STATUS_CODE;
 
 namespace NS {
   // 定义 MVC 模块类型
@@ -61,6 +66,9 @@ namespace NS {
         KoaStatic(options.staticPath || path.resolve(__dirname, 'static'))
       );
 
+      // request log
+      this.use(this.requestLog);
+
       this.checkModuleStrict = Boolean(options.checkModuleStrict);
       this.mvcConfig = {
         controller: { path: null },
@@ -69,6 +77,15 @@ namespace NS {
       };
       this.slice = false;
       this.ormInstance = null;
+    }
+
+    /**
+     * 封装请求信息日志
+     * @param ctx Koa.ExtendableContext
+     * @param next Koa.Next
+     */
+    private async requestLog(ctx: Koa.ExtendableContext, next: Koa.Next) {
+      await next();
     }
 
     /**
