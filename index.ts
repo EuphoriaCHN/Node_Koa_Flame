@@ -2,6 +2,7 @@ import Koa from 'koa';
 import { Options } from 'sequelize';
 import KoaBodyPaser from 'koa-bodyparser';
 import KoaStatic from 'koa-static';
+import KoaViews from 'koa-views';
 
 import fs from 'fs';
 import path from 'path';
@@ -10,7 +11,11 @@ import { ListenOptions } from 'net';
 
 import { logger } from './utils/util';
 import ORM from './lib/orm';
-import { HTTP_STATUS_CODE, STATUS_CODE } from './utils/constant';
+import {
+  HTTP_STATUS_CODE,
+  STATUS_CODE,
+  PROJECT_MODULE_PATH,
+} from './utils/constant';
 
 namespace NS {
   // 定义 MVC 模块类型
@@ -31,7 +36,16 @@ namespace NS {
   // constructor 定义
   type IEuphoriaNode = {
     checkModuleStrict?: boolean; // 如果是 true，则会严格检查 MVC 模块下是否会有文件
-    staticPath?: string; // 传入 koa-static
+    staticPath?: string; // 传入 koa-static，默认 /static
+    viewPath?: string; // 传入 koa-view，默认 /static/dist
+    // 传入 Koa-views 的参数
+    viewOpts?: {
+      autoRender?: boolean;
+      extension?: string;
+      options?: any;
+      map?: any;
+      engineSource?: any;
+    };
   };
 
   /**
@@ -58,8 +72,11 @@ namespace NS {
       // middleware
       this.use(KoaBodyPaser());
       // koa-static 默认指向 /static 目录
+      this.use(KoaStatic(options.staticPath || PROJECT_MODULE_PATH.STATIC));
+      // koa-view 默认指向 /static/dist 目录
+      // todo:: 用 router 去渲染模板
       this.use(
-        KoaStatic(options.staticPath || path.resolve(__dirname, 'static'))
+        KoaViews(options.viewPath || PROJECT_MODULE_PATH.VIEW, options.viewOpts)
       );
 
       // request log
