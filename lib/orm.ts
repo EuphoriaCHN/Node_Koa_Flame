@@ -8,6 +8,18 @@ namespace ORM {
       super(options);
     }
 
+    public static DEFAULT_OPTIONS: Partial<Options> = {
+      host: 'localhost',
+      port: 3306,
+      dialect: 'mysql',
+      omitNull: true,
+      pool: {
+        max: 5,
+        idle: 30000,
+        acquire: 60000,
+      },
+    };
+
     /**
      * 开始连接数据库
      */

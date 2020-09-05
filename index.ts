@@ -1,5 +1,7 @@
 import Koa from 'koa';
 import { Options } from 'sequelize';
+import KoaBodyPaser from 'koa-bodyparser';
+import KoaStatic from 'koa-static';
 
 import fs from 'fs';
 import path from 'path';
@@ -25,6 +27,12 @@ namespace NS {
     requestLog?: boolean; // 请求时 log 日志
   };
 
+  // constructor 定义
+  type IEuphoriaNode = {
+    checkModuleStrict?: boolean; // 如果是 true，则会严格检查 MVC 模块下是否会有文件
+    staticPath?: string; // 传入 koa-static
+  };
+
   /**
    * 主类
    */
@@ -37,13 +45,23 @@ namespace NS {
 
     // 输出静默
     private slice: boolean | Slice;
+    // 严格检查 MVC 模块文件
+    private readonly checkModuleStrict: boolean;
 
-    // ORM 只读实例
+    // ORM 实例
     public ormInstance: ORM;
 
-    constructor() {
+    constructor(options: IEuphoriaNode = {}) {
       super();
 
+      // middleware
+      this.use(KoaBodyPaser());
+      // koa-static 默认指向 /static 目录
+      this.use(
+        KoaStatic(options.staticPath || path.resolve(__dirname, 'static'))
+      );
+
+      this.checkModuleStrict = Boolean(options.checkModuleStrict);
       this.mvcConfig = {
         controller: { path: null },
         model: { path: null },
@@ -100,22 +118,13 @@ namespace NS {
      * @param options Sequelize 配置项
      */
     createORM(options: Options) {
-      const _this = this;
-
-      const DEFAULT_OPTIONS: Partial<Options> = {
-        host: 'localhost',
-        port: 3306,
-        dialect: 'mysql',
+      const LOGER_OPTIONS: Partial<Options> = {
         logging: this.sliceLog(null, 'databaseLog'),
-        omitNull: true,
-        pool: {
-          max: 5,
-          idle: 30000,
-          acquire: 60000,
-        },
       };
 
-      this.ormInstance = new ORM(Object.assign({}, DEFAULT_OPTIONS, options));
+      this.ormInstance = new ORM(
+        Object.assign(LOGER_OPTIONS, ORM.DEFAULT_OPTIONS, options)
+      );
     }
 
     /**
@@ -141,12 +150,12 @@ namespace NS {
           .readdirSync(path)
           .filter((filename) => /\.[jt]s$/.test(filename)); // 只筛选 .js .ts 模块
 
-        // // 判断文件夹是否为空
-        // if (!filesInModelDir.length) {
-        //   throw new Error(
-        //     `指定的路径为 ${path} 的 ${mode} 模块下没有任何模块文件，请检查！\n我们仅默认 .js .ts 为模块文件！`
-        //   );
-        // }
+        // 判断文件夹是否为空
+        if (this.checkModuleStrict && !filesInModelDir.length) {
+          throw new Error(
+            `指定的路径为 ${path} 的 ${mode} 模块下没有任何模块文件，请检查！\n我们仅默认 .js .ts 为模块文件！`
+          );
+        }
 
         // 设置路径
         this.mvcConfig[mode].path = path;
@@ -243,7 +252,33 @@ namespace NS {
       // 如果当前有数据库 ORM 实例
       if (this.ormInstance) {
         // 进行数据库连接
-        this.ormInstance.connect(this.sliceLog(null, 'message'));
+        this.ormInstance.connect(this.sliceLog(null, 'databaseLog'));
+      }
+
+      // 获取最后一个参数，看看是不是回调函数
+      const optionalListenCallback = args[args.length - 1];
+
+      // 获取第一个参数，看看是不是端口号
+      const port = args[0];
+
+      // 重写回调
+      const listenCallback = () => {
+        const msg =
+          typeof port === 'number'
+            ? `服务在 ${port} 端口上启动成功`
+            : '服务启动成功';
+
+        this.sliceLog(logger(msg, 'success', true), 'message');
+
+        if (typeof optionalListenCallback === 'function') {
+          optionalListenCallback();
+        }
+      };
+
+      if (typeof listenCallback === 'function') {
+        args[args.length - 1] = listenCallback;
+      } else {
+        args[args.length] = listenCallback;
       }
 
       return super.listen(...args);
