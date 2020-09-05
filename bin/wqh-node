@@ -1,0 +1,62 @@
+#!/usr/bin/env node
+
+const {
+  program
+} = require('commander');
+const chalk = require('chalk');
+const spinner = require('ora')();
+const fs = require('fs');
+const path = require('path');
+
+const pulldb = require('./lib/pulldb');
+
+program.version('0.0.1');
+
+program
+  .option('-p, --pulldb [configFilePath]', '同步远程数据库，配置文件目录默认为 /config/orm.config.js，默认输出目录为 /app/model');
+
+program.parse(process.argv);
+
+const DEFAULT_CONFIG = {
+  CONFIG_FILE_PATH: path.resolve(process.cwd() || process.env.PWD, 'config', 'orm.config.js')
+};
+
+/**
+ * PULLDB 同步远程数据库
+ */
+if (program.pulldb) {
+  // 获取配置文件路径
+  const configFilePath = program.pulldb === true ? DEFAULT_CONFIG.CONFIG_FILE_PATH : program.pulldb;
+
+  if (!fs.existsSync(configFilePath)) {
+    console.log(chalk.red(`配置文件 ${configFilePath} 不存在！`))
+    process.exit(-1);
+  }
+
+  const extName = path.extname(configFilePath);
+
+  const configFileContentString = fs.readFileSync(configFilePath, 'utf-8');
+  let configFileContent = null;
+
+  switch (extName) {
+    case '.json':
+      configFileContent = JSON.parse(configFileContent);
+      break;
+    case '.js':
+      configFileContent = eval(configFileContentString);
+      break;
+    default:
+      console.log(chalk.red(`配置文件 ${configFilePath} 格式不支持！只支持符合 CommonJS 规范的 JS 文件或 JSON 配置文件`))
+      process.exit(-1);
+  }
+
+  spinner.start('正在同步远程数据库...');
+  pulldb(configFileContent).then(() => {
+    console.log(chalk.green('同步远程数据库成功！'));
+  }, err => {
+    console.log(chalk.red('同步远程数据库失败！'));
+    console.log(err.message || JSON.stringify(err));
+  }).finally(() => {
+    spinner.stop();
+  });
+}
