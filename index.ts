@@ -151,19 +151,21 @@ namespace NS {
      * 设置消息静默方式
      * @param option 配置参数
      */
-    setSlice(option: boolean | Slice) {
+    setSlice(option: boolean | Slice): EuphoriaNode {
       if (typeof option === 'boolean') {
         this.slice = option;
       } else {
         this.slice = Object.assign({}, option);
       }
+
+      return this;
     }
 
     /**
      * 创建 ORM 实例
      * @param options Sequelize 配置项
      */
-    createORM(options: Options) {
+    createORM(options: Options): EuphoriaNode {
       const LOGER_OPTIONS: Partial<Options> = {
         logging: this.sliceLog(null, 'databaseLog'),
       };
@@ -171,6 +173,8 @@ namespace NS {
       this.ormInstance = new ORM(
         Object.assign(LOGER_OPTIONS, ORM.DEFAULT_OPTIONS, options)
       );
+
+      return this;
     }
 
     /**
@@ -178,7 +182,7 @@ namespace NS {
      * @param key 指定 MVC 模块类型
      * @param value 指定路径，这个路径必须存在
      */
-    bindMVCDir(options: { [key in IMVCMode]?: string }): void {
+    bindMVCDir(options: { [key in IMVCMode]?: string }): EuphoriaNode {
       Object.keys(options).forEach((mode) => {
         this.sliceLog(logger(`正在绑定 ${mode} 模块...`, 'processing', true));
 
@@ -208,6 +212,8 @@ namespace NS {
 
         this.sliceLog(logger(`绑定 ${mode} 模块成功！`, 'success', true));
       });
+
+      return this;
     }
 
     /**
@@ -219,7 +225,7 @@ namespace NS {
      * - /app/service
      * @param _path 兜底路径，当 cwd() 和 env.PWD 都拿不到时，就用它，否则抛出异常
      */
-    autoBindMVCDir(_path = null) {
+    autoBindMVCDir(_path = null): EuphoriaNode {
       let userPath: string | null = null;
 
       if (process.cwd) {
@@ -243,6 +249,8 @@ namespace NS {
         service: getPathResult('service'),
         model: getPathResult('model'),
       });
+
+      return this;
     }
 
     listen(
