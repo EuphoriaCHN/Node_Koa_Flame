@@ -1,4 +1,5 @@
 import Koa from 'koa';
+import { Options } from 'sequelize';
 
 import fs from 'fs';
 import path from 'path';
@@ -6,6 +7,7 @@ import { Server } from 'http';
 import { ListenOptions } from 'net';
 
 import { logger } from './utils/util';
+import ORM from './lib/orm';
 
 namespace NS {
   // 定义 MVC 模块类型
@@ -23,6 +25,9 @@ namespace NS {
     requestLog?: boolean; // 请求时 log 日志
   };
 
+  /**
+   * 主类
+   */
   export class EuphoriaNode extends Koa {
     private mvcConfig: {
       controller: IMVCStructure;
@@ -30,7 +35,11 @@ namespace NS {
       service: IMVCStructure;
     };
 
+    // 输出静默
     private slice: boolean | Slice;
+
+    // ORM 只读实例
+    public ormInstance: ORM;
 
     constructor() {
       super();
@@ -41,6 +50,7 @@ namespace NS {
         service: { path: null },
       };
       this.slice = false;
+      this.ormInstance = null;
     }
 
     /**
@@ -50,7 +60,7 @@ namespace NS {
      * @returns {boolean} 如果是 true 表示此消息静默
      */
     private sliceLog(
-      message: string | Function,
+      message: string | Function | null,
       type: keyof Slice = 'message'
     ) {
       if (this.slice === true) {
@@ -60,14 +70,17 @@ namespace NS {
       if (typeof this.slice === 'object') {
         if ((this.slice as Slice)[type]) {
           // 某个消息被静默了
-          return;
+          return true;
         }
       }
-      if (typeof message === 'string') {
-        console.log(message);
-      } else {
-        message();
+      if (message !== null) {
+        if (typeof message === 'string') {
+          console.log(message);
+        } else {
+          message();
+        }
       }
+      return false;
     }
 
     /**
@@ -80,6 +93,29 @@ namespace NS {
       } else {
         this.slice = Object.assign({}, option);
       }
+    }
+
+    /**
+     * 创建 ORM 实例
+     * @param options Sequelize 配置项
+     */
+    createORM(options: Options) {
+      const _this = this;
+
+      const DEFAULT_OPTIONS: Partial<Options> = {
+        host: 'localhost',
+        port: 3306,
+        dialect: 'mysql',
+        logging: this.sliceLog(null, 'databaseLog'),
+        omitNull: true,
+        pool: {
+          max: 5,
+          idle: 30000,
+          acquire: 60000,
+        },
+      };
+
+      this.ormInstance = new ORM(Object.assign({}, DEFAULT_OPTIONS, options));
     }
 
     /**
@@ -202,6 +238,12 @@ namespace NS {
             );
           }
         });
+      }
+
+      // 如果当前有数据库 ORM 实例
+      if (this.ormInstance) {
+        // 进行数据库连接
+        this.ormInstance.connect(this.sliceLog(null, 'message'));
       }
 
       return super.listen(...args);
