@@ -125,9 +125,9 @@ namespace NS {
 
     /**
      * 判断是否应当打印某个日志
-     * @param {string | Function} message 打印的字符串，如果是函数则表示一个回调
-     * @param {keyof Slice} type 打印类型，默认是 message 通知
-     * @returns {boolean} 如果是 true 表示此消息静默
+     * @param message 打印的字符串，如果是函数则表示一个回调
+     * @param type 打印类型，默认是 message 通知
+     * @returns 如果是 true 表示此消息静默
      */
     private sliceLog(
       message: string | Function | null,
@@ -303,7 +303,6 @@ namespace NS {
 
     // 将自动绑定放到 options 上
     // KOA 自带的 listen 第二个参数不可能是 Object，所以可以进行判断
-
     listen(
       port: number,
       options?: ListenOptions,
