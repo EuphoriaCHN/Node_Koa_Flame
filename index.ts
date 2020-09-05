@@ -184,31 +184,40 @@ namespace NS {
      */
     bindMVCDir(options: { [key in IMVCMode]?: string }): EuphoriaNode {
       Object.keys(options).forEach((mode) => {
-        this.sliceLog(logger(`正在绑定 ${mode} 模块...`, 'processing', true));
+        const _path = options[mode];
 
-        const path = options[mode];
+        this.sliceLog(
+          logger(
+            `正在绑定 ${mode} 模块: ${path.relative(
+              PROJECT_MODULE_PATH.ROOT,
+              _path
+            )}`,
+            'processing',
+            true
+          )
+        );
 
         // 检测文件夹是否存在
-        if (!fs.existsSync(path)) {
+        if (!fs.existsSync(_path)) {
           throw new Error(
-            `指定的 ${mode} 路径 ${path} 不存在于当前计算机上！请检查！`
+            `指定的 ${mode} 路径 ${_path} 不存在于当前计算机上！请检查！`
           );
         }
 
         // 获取文件夹内容
         const filesInModelDir = fs
-          .readdirSync(path)
+          .readdirSync(_path)
           .filter((filename) => /\.[jt]s$/.test(filename)); // 只筛选 .js .ts 模块
 
         // 判断文件夹是否为空
         if (this.checkModuleStrict && !filesInModelDir.length) {
           throw new Error(
-            `指定的路径为 ${path} 的 ${mode} 模块下没有任何模块文件，请检查！\n我们仅默认 .js .ts 为模块文件！`
+            `指定的路径为 ${_path} 的 ${mode} 模块下没有任何模块文件，请检查！\n我们仅默认 .js .ts 为模块文件！`
           );
         }
 
         // 设置路径
-        this.mvcConfig[mode].path = path;
+        this.mvcConfig[mode].path = _path;
 
         this.sliceLog(logger(`绑定 ${mode} 模块成功！`, 'success', true));
       });
@@ -223,25 +232,10 @@ namespace NS {
      * - /app/controller
      * - /app/model
      * - /app/service
-     * @param _path 兜底路径，当 cwd() 和 env.PWD 都拿不到时，就用它，否则抛出异常
      */
-    autoBindMVCDir(_path = null): EuphoriaNode {
-      let userPath: string | null = null;
-
-      if (process.cwd) {
-        userPath = process.cwd();
-      } else if (process.env.PWD) {
-        userPath = process.env.PWD;
-      } else if (_path) {
-        userPath = _path;
-      } else {
-        throw new Error(
-          '无法解析用户当前根路径，尝试给予该方法一个参数？代表兜底路径'
-        );
-      }
-
+    autoBindMVCDir(): EuphoriaNode {
       function getPathResult(moduleName: IMVCMode) {
-        return path.resolve(userPath, 'app', moduleName);
+        return path.resolve(PROJECT_MODULE_PATH.APP, moduleName);
       }
 
       this.bindMVCDir({
