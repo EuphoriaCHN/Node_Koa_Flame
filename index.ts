@@ -10,7 +10,7 @@ import { ListenOptions } from 'net';
 
 import { logger } from './utils/util';
 import ORM from './lib/orm';
-import { HTTP_STATUS_CODE } from './utils/constant';
+import { HTTP_STATUS_CODE, STATUS_CODE } from './utils/constant';
 
 namespace NS {
   // 定义 MVC 模块类型
@@ -88,7 +88,16 @@ namespace NS {
         'message'
       );
 
-      await next();
+      try {
+        await next();
+      } catch (error) {
+        // 底层抛错
+        ctx.response.status = HTTP_STATUS_CODE.INTERNAL_SERVER_ERROR;
+        return (ctx.body = {
+          status_code: STATUS_CODE.COMMON_ERROR,
+          message: error.message || JSON.stringify(error),
+        });
+      }
     }
 
     /**
