@@ -7,7 +7,6 @@ import KoaViews from 'koa-views';
 import fs from 'fs';
 import path from 'path';
 import { Server } from 'http';
-import { ListenOptions } from 'net';
 
 import { logger } from './utils/util';
 import ORM from './lib/orm';
@@ -47,6 +46,12 @@ namespace NS {
       map?: any;
       engineSource?: any;
     };
+  };
+
+  // listen 第二个配置参数结构定义
+  // koa listen 第二个参数没有 object，所以可以进行扩展并判断
+  type ListenOptions = {
+    autoLinkMVC?: boolean;
   };
 
   /**
@@ -294,15 +299,28 @@ namespace NS {
       backlog?: number,
       listeningListener?: () => void
     ): Server;
-
-    // 将自动绑定放到 handle 上
     listen(handle: any, listeningListener?: () => void): Server;
 
+    // 将自动绑定放到 options 上
+    // KOA 自带的 listen 第二个参数不可能是 Object，所以可以进行判断
+
+    listen(
+      port: number,
+      options?: ListenOptions,
+      listeningListener?: () => void
+    ): Server;
+
     listen(...args) {
-      if (typeof args[0] === 'boolean') {
-        // 自动绑定 MVC 模块
-        this.autoBindMVCDir();
-        args.shift(); // 去掉第一个参数，其余的传入 super
+      if (args[1] && typeof args[1] === 'object') {
+        if ((args[1] as ListenOptions).autoLinkMVC) {
+          // 自动绑定 MVC 模块
+          this.autoBindMVCDir();
+        }
+        const _firstArg = args.shift();
+        // 移除掉第二个
+        args.shift();
+        // 加回第一个
+        args.unshift(_firstArg);
       } else {
         // 遍历 this.mvcConfig，给予用户警告【未绑定的 MVC 模块】
         Object.keys(this.mvcConfig).forEach((moduleName) => {
