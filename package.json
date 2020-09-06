@@ -2,12 +2,12 @@
   "name": "node_koa_flame",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "./dist/index.js",
   "scripts": {
     "build": "tsc --build ./tsconfig.json",
     "format": "prettier --write \"./**/*.ts\" \"./**/*.js\"",
     "lint": "tslint -p tsconfig.json",
-    "test": "node ./test/index.js"
+    "dev": "gulp"
   },
   "bin": {
     "wqh-node": "bin/wqh-node"
@@ -37,6 +37,9 @@
     "sequelize-auto": "^0.5.4"
   },
   "devDependencies": {
+    "gulp": "^4.0.2",
+    "gulp-cli": "^2.3.0",
+    "gulp-typescript": "^6.0.0-alpha.1",
     "prettier": "^2.1.1",
     "tslint": "^6.1.3",
     "tslint-config-prettier": "^1.18.0",

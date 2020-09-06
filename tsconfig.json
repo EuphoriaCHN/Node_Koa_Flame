@@ -17,6 +17,13 @@
     "theme": "default",
     "isolatedModules": false // 将每个文件作为单独的模块。
   },
-  "include": ["./**/*"],
-  "exclude": ["node_modules", "./dist", "./test"]
+  "include": [
+    "./**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "./dist",
+    "./test",
+    "./gulpfile.js"
+  ]
 }
