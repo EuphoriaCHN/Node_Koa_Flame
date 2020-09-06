@@ -338,12 +338,6 @@ namespace NS {
         });
       }
 
-      // 如果当前有数据库 ORM 实例
-      if (this.orm) {
-        // 进行数据库连接
-        this.orm.connect(this.sliceLog(null, 'databaseLog'));
-      }
-
       // 获取最后一个参数，看看是不是回调函数
       const optionalListenCallback = args[args.length - 1];
 
@@ -370,7 +364,15 @@ namespace NS {
         args[args.length] = listenCallback;
       }
 
-      return super.listen(...args);
+      const serve = super.listen(...args);
+
+      // 如果当前有数据库 ORM 实例
+      if (this.orm) {
+        // 进行数据库连接
+        this.orm.connect(this.sliceLog(null, 'databaseLog'));
+      }
+
+      return serve;
     }
   }
 }
