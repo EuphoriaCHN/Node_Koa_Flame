@@ -1,13 +1,9 @@
 const WqhNode = require('../dist/index');
+const Router = require('./router');
 
 const app = new WqhNode();
 
-app.use(() => {
-  console.log('yes!');
-  return async function (ctx, next) {
-    await next();
-  }
-});
+app.use(Router.routes());
 
 app
   .createORM(require('./config/orm.config'))

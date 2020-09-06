@@ -10,7 +10,7 @@ import { Server } from 'http';
 
 import { logger } from './utils/util';
 import ORM from './lib/orm';
-import Router from './lib/router';
+import RouterClass from './lib/router';
 
 import {
   HTTP_STATUS_CODE,
@@ -75,7 +75,7 @@ namespace NS {
     public orm: ORM;
 
     // Router 实例
-    public static router: Router;
+    public static Router = RouterClass;
 
     constructor(options: IEuphoriaNode = {}) {
       super();
@@ -101,9 +101,6 @@ namespace NS {
       };
       this.slice = false;
       this.orm = null;
-
-      // todo::
-      EuphoriaNode.router = null;
     }
 
     /**
